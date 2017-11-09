@@ -2,7 +2,7 @@
 
 AssetManager 主要提供了资源相关操作的上层接口, 和资源构建工具, 让用户不再直接使用引擎的底层资源操作接口 Resources 和 AssetBundle. 
 
-资源路径决定了资源是从 Resources 还是 AssetBundle 中加载, 加载前, 首先会对资源路径进行检查:
+对于资源加载, 资源路径决定了资源是从 Resources 还是 AssetBundle 中加载, 加载前, 首先会对资源路径进行检查:
 
 如果路径中包含 "/Resources/", 则内部构建一个 ResourcesAssetRequest 从 Resources 中加载.
 
