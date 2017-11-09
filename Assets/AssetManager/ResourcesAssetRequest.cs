@@ -50,18 +50,41 @@ namespace UAsset
 
 		public System.Action<string, Object> onloaded { get; set; }
 
+		const string resourcesPath = "/Resources/";
+
+		private static bool IsResourcesPath (string path)
+		{
+			UnityEngine.Assertions.Assert.AreNotEqual (null, path);
+			return path.Contains (resourcesPath);
+		}
+
+		public static string GetResourcesPath (string path)
+		{
+			UnityEngine.Assertions.Assert.AreNotEqual (null, path); 
+			string resPath = path.Remove (0, path.IndexOf (resourcesPath) + resourcesPath.Length); 
+			int length = resPath.LastIndexOf ('.');
+			if (length == -1) {
+				return resPath;
+			} 
+			return resPath.Substring (0, length);
+		}
+
 		public static AssetRequest Create (string path, System.Type type)
 		{
-			#if UNITY_EDITOR
-			if (AssetBundleManager.SimulateAssetBundleInEditor) {
-				return new AssetRequest (path, type); 
+			if (IsResourcesPath (path)) {
+				return new ResourcesAssetRequest (path, type);
 			} else {
-				return new BundleAssetRequest (path, type);
-			}
-			#else 
-			return new BundleAssetRequest (path, type); 
-			#endif 
-		}
+#if UNITY_EDITOR
+				if (AssetBundleManager.SimulateAssetBundleInEditor) {
+					return new AssetRequest (path, type); 
+				} else {
+					return new BundleAssetRequest (path, type);
+				}
+#else 
+				return new BundleAssetRequest (path, type); 
+#endif
+			} 
+		} 
 
 		public AssetRequest (string path, System.Type type)
 		{
@@ -155,25 +178,17 @@ namespace UAsset
 
 				if (request.IsDone ()) { 
 					asset = request.GetAsset<Object> (); 
-					if (asset is AudioClip) {
-						var clip = asset as AudioClip;
-						if (clip.loadState == AudioDataLoadState.Unloaded) {
-							clip.LoadAudioData ();
-						}
-					} 
 					return true;
 				} 
 				return false; 
 			} 
 		}
-
-
+			
 		protected override void OnLoad ()
 		{
 			request = AssetBundleManager.LoadAssetAsync (assetBundleName, assetName, assetType);
 		}
-
-
+			
 		protected override void OnUnload ()
 		{
 			request = null;  
@@ -185,9 +200,39 @@ namespace UAsset
 	/// Resources asset request.针对 Resources 中的资源
 	/// </summary>
 	public class ResourcesAssetRequest : AssetRequest
-	{
-		public ResourcesAssetRequest (string path, System.Type type) : base (path, type)
+	{ 
+		ResourceRequest request;
+
+		public override bool isDone {
+			get {
+				if (loadState == AssetLoadState.Unload) {
+					return false;
+				}
+
+				if (request == null) {
+					return true;
+				}
+
+				if (request.isDone) {
+					asset = request.asset;  
+					return true;
+				}
+				return false; 
+			} 
+		} 
+
+		public ResourcesAssetRequest (string path, System.Type type) : base (path, type) { }
+
+		protected override void OnLoad ()
 		{
+			var resourcesPath = GetResourcesPath (assetPath);
+			request = Resources.LoadAsync(resourcesPath, assetType);
+		}
+
+		protected override void OnUnload ()
+		{
+			Resources.UnloadAsset (asset); 
+			request = null;  
 		}
 	}
 }
