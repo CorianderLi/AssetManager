@@ -84,7 +84,7 @@ namespace UAsset
 				return new BundleAssetRequest (path, type); 
 #endif
 			} 
-		} 
+		}
 
 		public AssetRequest (string path, System.Type type)
 		{
@@ -159,6 +159,9 @@ namespace UAsset
 
 		public AssetBundleLoadAssetOperation request { get; private set; }
 
+
+		static Dictionary<string, int> bundleCounts = new Dictionary<string, int> ();
+
 		public BundleAssetRequest (string path, System.Type type) : base (path, type)
 		{ 
 			assetBundleName = AssetManifest.Instance.GetAssetBundleName (assetPath);
@@ -183,16 +186,26 @@ namespace UAsset
 				return false; 
 			} 
 		}
-			
+
 		protected override void OnLoad ()
 		{
 			request = AssetBundleManager.LoadAssetAsync (assetBundleName, assetName, assetType);
+			if (!bundleCounts.ContainsKey (assetBundleName)) {
+				bundleCounts [assetBundleName] = 1; 
+			} else {
+				bundleCounts [assetBundleName]++; 
+			}
 		}
-			
+
 		protected override void OnUnload ()
 		{
-			request = null;  
-			AssetBundleManager.UnloadAssetBundle (assetBundleName);
+			request = null; 
+			if (bundleCounts.ContainsKey (assetBundleName)) {
+				bundleCounts [assetBundleName] --;
+				if (bundleCounts[assetBundleName] == 0) {
+					AssetBundleManager.UnloadAssetBundle (assetBundleName); 
+				}
+			}   
 		}
 	}
 
@@ -200,7 +213,7 @@ namespace UAsset
 	/// Resources asset request.针对 Resources 中的资源
 	/// </summary>
 	public class ResourcesAssetRequest : AssetRequest
-	{ 
+	{
 		ResourceRequest request;
 
 		public override bool isDone {
@@ -219,14 +232,16 @@ namespace UAsset
 				}
 				return false; 
 			} 
-		} 
+		}
 
-		public ResourcesAssetRequest (string path, System.Type type) : base (path, type) { }
+		public ResourcesAssetRequest (string path, System.Type type) : base (path, type)
+		{
+		}
 
 		protected override void OnLoad ()
 		{
 			var resourcesPath = GetResourcesPath (assetPath);
-			request = Resources.LoadAsync(resourcesPath, assetType);
+			request = Resources.LoadAsync (resourcesPath, assetType);
 		}
 
 		protected override void OnUnload ()
