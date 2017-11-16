@@ -1,11 +1,11 @@
 # AssetManager #
 
 
-主要提供了资源相关操作的上层接口, 和资源构建工具, 让用户不再直接使用引擎的底层资源操作接口 Resources 和 AssetBundle. 
+主要提供了资源相关操作的上层接口, 和资源构建工具, 让用户不再直接使用引擎的底层资源操作接口 Resources 和 AssetBundle. 为避免阻塞主线程, 所有资源加载都是异步操作, 同时内建了基于引用计数的缓存策略, 确保同一份资源不会被重复加载亦不会轻易卸载.
 
 **对于资源加载**
 
-资源路径决定了资源是从 Resources 还是 AssetBundle 中加载, 加载前, 首先会对资源路径进行检查:如果路径中包含 "/Resources/", 则内部构建一个 ResourcesAssetRequest 从 Resources 中加载.反之则视作是 AssetBundle 中的资源, 在加载的时候, 内部构建一个 BundleAssetRequest, 然后根据一份 "Manifest" 文件把路径转换为资源的 assetBundleName 和 assetName 后, 再通过 AssetBundleManager 进行资源加载.对 AssetBundle 中的资源, 每个资源的 assetPath 和 assetBundleName 的映射关系都会被记录到一个 "Manifest" 文件中, 构建前可以通过 "Assets/BuildManifest" 命令生成这个文件.为避免阻塞主线程, 所有资源加载都是异步操作, 同时内建了基于引用计数的缓存策略, 确保同一份资源不会被重复加载亦不会轻易卸载. 
+资源路径决定了资源是从 Resources 还是 AssetBundle 中加载, 加载前, 首先会对资源路径进行检查:如果路径中包含 "/Resources/", 则内部构建一个 ResourcesAssetRequest 从 Resources 中加载.反之则视作是 AssetBundle 中的资源, 在加载的时候, 内部构建一个 BundleAssetRequest, 然后根据一份 "Manifest" 文件把路径转换为资源的 assetBundleName 和 assetName 后, 再通过 AssetBundleManager 进行资源加载.对 AssetBundle 中的资源, 每个资源的 assetPath 和 assetBundleName 的映射关系都会被记录到一个 "Manifest" 文件中, 构建前可以通过 "Assets/BuildManifest" 命令生成这个文件.
 
 **AssetManager 的接口主要包括**  
 
